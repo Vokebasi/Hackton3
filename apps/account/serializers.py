@@ -1,18 +1,22 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from rest_framework import serializers
-
+from.tasks import send_activation_code
 from config.settings import EMAIL_HOST_USER
 
 User = get_user_model()
 
 
-class RegistrationSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(min_length=6, required=True)
-    password_confirm = serializers.CharField(min_length=6, required=True)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
+class RegistrationSerializer(serializers.ModelSerializer):
+    password_confirm = serializers.CharField(max_length=100, required=True)
+    class Meta:
+        model = User
+        fields = ('nickname', 'email', 'password', 'password_confirm')
+
+    def validate_nickname(self, nickname):
+        if User.objects.filter(nickname=nickname).exists():
+            return serializers.ValidationError('This nickname is already token. Please choose another one')
+        return nickname
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
@@ -22,6 +26,8 @@ class RegistrationSerializer(serializers.Serializer):
     def validate(self, data):
         password = data.get('password')
         password_confirm = data.pop('password_confirm')
+        if not any(i for i in password if i.isdigit()):
+            raise serializers.ValidationError('Password must contain at least on digit')
         if password != password_confirm:
             raise serializers.ValidationError("Passwords didnt match")
         return data
@@ -29,32 +35,32 @@ class RegistrationSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         user.create_activation_code()
-        user.send_activation_code()
+        send_activation_code.delay(user.email, user.activation_code)
         return user
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    nickname = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
 
-    def validate_email(self, email):
-        if not User.objects.filter(email=email).exists():
+    def validate_nickname(self, nickname):
+        if not User.objects.filter(nickname=nickname).exists():
             raise serializers.ValidationError("User not found!")
-        return email
+        return nickname
 
     def validate(self, data):
         request = self.context.get('request')
-        email = data.get('email')
+        nickname = data.get('nickname')
         password = data.get('password')
-        if email and password:
+        if nickname and password:
             user = authenticate(
-                username = email,
+                username = nickname,
                 password = password,
                 request = request)
             if not user:
                 raise serializers.ValidationError('Bad credentials')
         else:
-            raise serializers.ValidationError("Email and Password are Required")
+            raise serializers.ValidationError("Nickname and Password are Required")
         data['user'] = user
         return data
 
@@ -123,4 +129,3 @@ class ForgotPasswordCompleteSerializer(serializers.Serializer):
         user = User.objects.get(email=email)
         user.set_password(password)
         user.save()
-

@@ -5,6 +5,7 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from apps.rating.views import RatingViewSet
 
 from config import settings
 
@@ -22,12 +23,12 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('admin/', admin.site.urls),
-    path('account/', include('apps.account.urls')),
-    path('product/', include('apps.product.urls')),
-    path('order/', include('apps.order.urls')),
-    path('category/', include('apps.category.urls')),
-    path('review/', include('apps.review.urls')),
-    path('comment/', include('apps.comment.urls')),
+   path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+   path('admin/', admin.site.urls),
+   path('account/', include('apps.account.urls')),
+   path('films/', include('apps.movie.urls')),
+   path('genres/', include('apps.genre.urls')),
+   path('comments/', include('apps.comment.urls')),
+   path('rating/', include('apps.rating.urls')),
+   
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

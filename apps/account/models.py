@@ -1,7 +1,7 @@
-from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
-from django.core.mail import send_mail
+from pickle import TRUE
 from django.db import models
-from config.settings import EMAIL_HOST_USER
+from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.db import models
 
 
 class UserManager(BaseUserManager):
@@ -24,16 +24,16 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(AbstractBaseUser):
+class CustomUser(AbstractBaseUser):
+    nickname = models.CharField(max_length=30, unique=True)
     email = models.EmailField(primary_key=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    first_name = models.CharField(max_length=100, blank=True)
-    last_name = models.CharField(max_length=100, blank=True)
     activation_code = models.CharField(max_length=8, blank=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+
+    USERNAME_FIELD = 'nickname'
+    REQUIRED_FIELDS = ['email']
 
     objects = UserManager()
 
@@ -43,7 +43,7 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return self.is_staff
 
-    def has_perm(self, perm, obj=None):
+    def has_perm(self, obj=None):
         return self.is_staff
 
     def create_activation_code(self):
@@ -54,18 +54,7 @@ class User(AbstractBaseUser):
 
     def activate_with_code(self, activation_code):
         if self.activation_code != activation_code:
-            raise Exception("Wrong Activation Code")
+            raise Exception("Неверный активационный код")
         self.is_active = True
         self.activation_code = ""
         self.save()
-
-    def send_activation_code(self):
-        message = f""" Спасибо за регистрацию.
-                        Ваша ссылка для активации: http://localhost:8000/account/activate/{self.activation_code}/ """
-
-        send_mail(
-            "Account Activation",
-            message,
-            EMAIL_HOST_USER,
-            [self.email],
-        )

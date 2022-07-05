@@ -1,9 +1,9 @@
 from rest_framework.routers import DefaultRouter
-from .views import CommentViewSet
+from .views import RatingViewSet
 
 
 router = DefaultRouter()
-router.register('', CommentViewSet)
+router.register('', RatingViewSet)
 
 
 urlpatterns = []

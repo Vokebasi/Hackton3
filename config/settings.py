@@ -38,20 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     # libs
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_yasg',
+    'drf_yasg', 
     'django_filters',
+
 
     # apps
     'apps.account',
-    'apps.product',
-    'apps.category',
-    'apps.order',
-    'apps.review',
+    'apps.movie',
+    'apps.genre',
     'apps.comment',
+    'apps.rating',
 ]
 
 MIDDLEWARE = [
@@ -99,7 +98,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'account.User'
+AUTH_USER_MODEL = 'account.CustomUser'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -135,6 +134,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = 'images/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '')
 
@@ -149,3 +149,8 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 EMAIL_PORT = config("EMAIL_PORT", cast=int)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+
+# celery settings
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
