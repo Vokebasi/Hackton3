@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.genre',
     'apps.comment',
     'apps.rating',
+    'apps.telegrambot',
 ]
 
 MIDDLEWARE = [
